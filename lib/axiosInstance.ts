@@ -39,6 +39,16 @@ axiosInstance.interceptors.request.use(
 // ─── Response Interceptor ───────────────────────────────────────────────────
 axiosInstance.interceptors.response.use(
   (response: AxiosResponse) => {
+    // If the backend returns an ApiResponse wrapper { success, message, data }
+    // unwrap it so callers get the actual payload.
+    if (
+      response.data &&
+      typeof response.data === "object" &&
+      "success" in response.data &&
+      "data" in response.data
+    ) {
+      response.data = response.data.data;
+    }
     return response;
   },
   (error: AxiosError) => {

@@ -9,14 +9,14 @@ import {
   ReactNode,
 } from "react";
 import { useRouter, usePathname } from "next/navigation";
-import authApi, { LoginPayload } from "@/lib/api/authApi";
+import authApi from "@/lib/api/authApi";
+import { LoginPayload } from "@/schema/auth";
 
 // ─── Types ──────────────────────────────────────────────────────────────────
 
 interface User {
-  id: string;
-  email: string;
-  name: string;
+  username: string;
+  fullName: string;
   role: string;
   avatar?: string;
 }
@@ -61,8 +61,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
       if (storedToken && storedUser) {
         try {
-          // Validate token by calling /auth/me
-          const userData = await authApi.getMe();
+          // No /auth/me endpoint exists, so we restore user from localStorage.
+          // If the token is expired, any subsequent API call will fail with 401
+          // and the axios interceptor will log the user out.
+          const userData = JSON.parse(storedUser);
           setToken(storedToken);
           setUser(userData);
         } catch {
@@ -88,16 +90,22 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, [loading, isAuthenticated, pathname, router]);
 
   const login = useCallback(
-    async (email: string, password: string) => {
-      const payload: LoginPayload = { email, password };
+    async (username: string, password: string) => {
+      const payload: LoginPayload = { username, password };
       const data = await authApi.login(payload);
+
+      const user: User = {
+        username: data.username,
+        fullName: data.fullName,
+        role: data.role,
+      };
 
       // Persist token and user
       localStorage.setItem("token", data.token);
-      localStorage.setItem("user", JSON.stringify(data.user));
+      localStorage.setItem("user", JSON.stringify(user));
 
       setToken(data.token);
-      setUser(data.user);
+      setUser(user);
 
       router.replace("/");
     },
@@ -105,8 +113,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   );
 
   const logout = useCallback(() => {
-    // Fire-and-forget server-side logout
-    authApi.logout();
+    // // Fire-and-forget server-side logout
+    // authApi.logout();
 
     localStorage.removeItem("token");
     localStorage.removeItem("user");

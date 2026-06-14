@@ -8,7 +8,7 @@ export default function LoginPage() {
   const { login, isAuthenticated, loading } = useAuth();
   const router = useRouter();
 
-  const [email, setEmail] = useState("");
+  const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [submitting, setSubmitting] = useState(false);
@@ -25,14 +25,14 @@ export default function LoginPage() {
     e.preventDefault();
     setError("");
 
-    if (!email || !password) {
-      setError("Please enter both email and password.");
+    if (!username || !password) {
+      setError("Please enter both username and password.");
       return;
     }
 
     setSubmitting(true);
     try {
-      await login(email, password);
+      await login(username, password);
     } catch (err: unknown) {
       if (
         typeof err === "object" &&
@@ -144,14 +144,14 @@ export default function LoginPage() {
               Email address
             </label>
             <input
-              id="email"
-              name="email"
-              type="email"
+              id="username"
+              name="username"
+              type="text"
               className="input-field"
-              placeholder="admin@healthpath.com"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              autoComplete="email"
+              placeholder="admin"
+              value={username}
+              onChange={(e) => setUsername(e.target.value)}
+              autoComplete="username"
               autoFocus
             />
           </div>
