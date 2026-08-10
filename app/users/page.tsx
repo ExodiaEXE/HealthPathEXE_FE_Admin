@@ -79,6 +79,7 @@ function UsersContent() {
   const [page, setPage] = useState(1);
   const [showCreate, setShowCreate] = useState(false);
   const [toggling, setToggling] = useState<string | null>(null);
+  const [deleting, setDeleting] = useState<string | null>(null);
 
   const fetchUsers = useCallback(async () => {
     setLoading(true);
@@ -105,6 +106,25 @@ function UsersContent() {
       console.error("Toggle failed");
     } finally {
       setToggling(null);
+    }
+  };
+
+  const handleDelete = async (id: string, email: string) => {
+    if (
+      !confirm(
+        `Xóa tài khoản "${email}"?\n\nThao tác soft-delete: user biến mất khỏi danh sách, email có thể đăng ký lại. Không hoàn tác từ UI.`
+      )
+    ) {
+      return;
+    }
+    setDeleting(id);
+    try {
+      await userApi.deleteUser(id);
+      fetchUsers();
+    } catch {
+      alert("Xóa tài khoản thất bại. Kiểm tra API / quyền admin.");
+    } finally {
+      setDeleting(null);
     }
   };
 
@@ -177,14 +197,24 @@ function UsersContent() {
                       </td>
                       <td>{formatDate(u.createdAt)}</td>
                       <td>
-                        <button
-                          className={u.isActive ? "btn-danger" : "btn-success"}
-                          style={{ fontSize: "0.75rem", padding: "0.4rem 0.75rem" }}
-                          onClick={() => handleToggle(u.id)}
-                          disabled={toggling === u.id}
-                        >
-                          {u.isActive ? "Ban" : "Unban"}
-                        </button>
+                        <div style={{ display: "flex", gap: "0.4rem", flexWrap: "wrap" }}>
+                          <button
+                            className={u.isActive ? "btn-danger" : "btn-success"}
+                            style={{ fontSize: "0.75rem", padding: "0.35rem 0.65rem" }}
+                            onClick={() => handleToggle(u.id)}
+                            disabled={toggling === u.id || deleting === u.id}
+                          >
+                            {toggling === u.id ? "..." : u.isActive ? "Ban" : "Unban"}
+                          </button>
+                          <button
+                            className="btn-danger"
+                            style={{ fontSize: "0.75rem", padding: "0.35rem 0.65rem" }}
+                            onClick={() => handleDelete(u.id, u.email)}
+                            disabled={deleting === u.id || toggling === u.id}
+                          >
+                            {deleting === u.id ? "..." : "Delete"}
+                          </button>
+                        </div>
                       </td>
                     </tr>
                   ))}

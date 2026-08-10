@@ -32,6 +32,10 @@ const userApi = {
     const response = await axiosInstance.put(`/admin/users/${id}/toggle-active`);
     return response.data;
   },
+
+  deleteUser: async (id: string): Promise<void> => {
+    await axiosInstance.delete(`/admin/users/${id}`);
+  },
 };
 
 export default userApi;
